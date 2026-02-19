@@ -1,8 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  RefreshControl,
+} from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { api } from '../services/api';
+import DonationForm from '../components/DonationForm';
+import DonationsList from '../components/DonationsList';
+import { colors } from '../theme';
 
 type RootStackParamList = {
   FundraiserDetail: { fundraiserId: number };
@@ -24,13 +34,28 @@ interface Fundraiser {
 export default function FundraiserDetailScreen() {
   const route = useRoute<FundraiserDetailRouteProp>();
   const { fundraiserId } = route.params;
+  const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery({
+  const {
+    data,
+    isLoading,
+    error,
+    refetch: refetchFundraiser,
+  } = useQuery({
     queryKey: ['fundraiser', fundraiserId],
     queryFn: () => api.getFundraiser(fundraiserId),
   });
 
   const fundraiser = data?.data;
+  const [refreshing, setRefreshing] = React.useState(false);
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ['fundraiser', fundraiserId] }),
+      queryClient.refetchQueries({ queryKey: ['donations', fundraiserId] }),
+    ]);
+    setRefreshing(false);
+  }, [queryClient, fundraiserId]);
 
   if (isLoading) {
     return (
@@ -51,7 +76,12 @@ export default function FundraiserDetailScreen() {
   const progress = (fundraiser.raised / fundraiser.goal) * 100;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <Image source={{ uri: fundraiser.imageUrl }} style={styles.image} />
       <View style={styles.content}>
         <Text style={styles.title}>{fundraiser.title}</Text>
@@ -68,9 +98,8 @@ export default function FundraiserDetailScreen() {
           <Text style={styles.percentage}>{Math.round(progress)}% funded</Text>
         </View>
 
-        {/* TODO: Task 1 - Add donation form here */}
-        
-        {/* TODO: Task 2 - Add donations list here */}
+        <DonationForm fundraiserId={fundraiserId} />
+        <DonationsList fundraiserId={fundraiserId} scrollEnabled={false} />
       </View>
     </ScrollView>
   );
@@ -79,12 +108,12 @@ export default function FundraiserDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   image: {
     width: '100%',
     height: 300,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.surfaceMuted,
   },
   content: {
     padding: 16,
@@ -93,30 +122,30 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#333',
+    color: colors.text,
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 24,
     lineHeight: 24,
   },
   progressSection: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
   },
   progressBar: {
     height: 12,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 6,
     overflow: 'hidden',
     marginBottom: 12,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.primary,
   },
   amountContainer: {
     flexDirection: 'row',
@@ -127,15 +156,15 @@ const styles = StyleSheet.create({
   raised: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: colors.primary,
   },
   goal: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
   },
   percentage: {
     fontSize: 14,
-    color: '#999',
+    color: colors.textMuted,
     textAlign: 'center',
   },
   centerContainer: {
@@ -144,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: '#d32f2f',
+    color: colors.error,
     fontSize: 16,
   },
 });

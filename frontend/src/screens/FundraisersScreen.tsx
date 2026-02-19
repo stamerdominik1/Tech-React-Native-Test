@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
+import { colors } from '../theme';
 
 type RootStackParamList = {
   Fundraisers: undefined;
@@ -28,7 +29,7 @@ export default function FundraisersScreen() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['fundraisers'],
-    queryFn: api.getFundraisers,
+    queryFn: () => api.getFundraisers(),
   });
 
   const fundraisers = data?.data || [];
@@ -93,17 +94,17 @@ export default function FundraisersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   list: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 200,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.surfaceMuted,
   },
   content: {
     padding: 16,
@@ -121,11 +122,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
+    color: colors.text,
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   progressContainer: {
@@ -133,14 +134,14 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.primary,
   },
   amountContainer: {
     flexDirection: 'row',
@@ -150,11 +151,11 @@ const styles = StyleSheet.create({
   raised: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: colors.primary,
   },
   goal: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   centerContainer: {
     flex: 1,
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: '#d32f2f',
+    color: colors.error,
     fontSize: 16,
   },
 });
